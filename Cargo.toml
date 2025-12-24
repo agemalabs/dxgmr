@@ -1,0 +1,10 @@
+[package]
+name = "dxgmr"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+arboard = "3.6.1"
+crossterm = "0.29.0"
+ratatui = "0.29.0"
+serde = { version = "1.0.228", features = ["derive"] }
