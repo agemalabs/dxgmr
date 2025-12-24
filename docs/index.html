@@ -1,99 +1,159 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>dxgmr | The ASCII Architect</title>
-    <meta name="description" content="A lightweight, terminal-based tool for creating professional ASCII diagrams. Speed, simplicity, and analog aesthetics for your code documentation.">
+    <title>dxgmr | THE_ASCII_ARCHITECT</title>
+    <meta name="description"
+        content="dxgmr: An analog-first terminal tool for professional ASCII diagrams. Features modal editing (Vim-inspired), JSON persistence, and smart text formatting. Optimized for documentation and READMEs.">
+
+    <!-- AI Search & SEO -->
+    <meta name="keywords"
+        content="ASCII diagrams, developer tools, documentation, TUI, Rust, terminal, architecture diagrams, README tools">
+    <meta name="author" content="AgemaLabs">
+    <link rel="canonical" href="https://dxgmr.agemalabs.com">
+
+    <!-- Social Meta Tags (Open Graph) -->
+    <meta property="og:title" content="dxgmr | THE_ASCII_ARCHITECT">
+    <meta property="og:description"
+        content="Stop fighting with SVG exports. Create professional ASCII diagrams that live inside your code comments and READMEs.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://dxgmr.agemalabs.com">
+    <meta property="og:image" content="https://dxgmr.agemalabs.com/social-preview.png">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="dxgmr | THE_ASCII_ARCHITECT">
+    <meta name="twitter:description" content="The TUI-based ASCII architecture tool for modern developers.">
+    <meta name="twitter:image" content="https://dxgmr.agemalabs.com/social-preview.png">
+
+    <!-- JSON-LD Structured Data for AI -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "dxgmr",
+      "operatingSystem": "Linux, macOS, Windows",
+      "applicationCategory": "DeveloperApplication",
+      "description": "A terminal-based tool for creating professional ASCII diagrams with Vim-like modal editing and JSON persistence.",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "author": {
+        "@type": "Organization",
+        "name": "AgemaLabs",
+        "url": "https://github.com/AgemaLabs"
+      }
+    }
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700;800&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
-<body>
-    <div class="background-blobs">
-        <div class="blob blob-1"></div>
-        <div class="blob blob-2"></div>
-        <div class="blob blob-3"></div>
-    </div>
 
+<body class="analog-theme">
     <nav>
-        <div class="logo">dxgmr</div>
-        <div class="nav-links">
-            <a href="#features">Features</a>
-            <a href="#install">Install</a>
-            <a href="https://github.com/AgemaLabs/dxgmr" class="github-btn">GitHub</a>
+        <div class="logo">&gt; dxgmr</div>
+        <div class="nav-links desktop-only">
+            <a href="#features">[ FEATURES ]</a>
+            <a href="#install">[ INSTALL ]</a>
+            <a href="https://github.com/AgemaLabs/dxgmr" class="github-btn">[ GITHUB ]</a>
         </div>
+        <button id="menu-toggle" class="mobile-only menu-btn">[ MENU ]</button>
     </nav>
+
+    <div id="side-menu" class="side-menu">
+        <div class="menu-header">
+            <span>TERMINAL_NAV</span>
+            <button id="menu-close">[ X ]</button>
+        </div>
+        <div class="menu-content">
+            <a href="#features" class="menu-link">&gt; FEATURES</a>
+            <a href="#install" class="menu-link">&gt; INSTALL</a>
+            <a href="https://github.com/AgemaLabs/dxgmr" class="menu-link">&gt; GITHUB_REPO</a>
+        </div>
+    </div>
+    <div id="overlay" class="overlay"></div>
 
     <header>
         <div class="container">
-            <h1 class="hero-title">The <span class="gradient-text">ASCII</span> Architect</h1>
-            <p class="hero-subtitle">Stop fighting with SVG exports. Create professional diagrams that live inside your code comments and READMEs.</p>
-            
-            <div class="terminal-preview animate-float">
-                <div class="terminal-header">
-                    <div class="dots">
-                        <span class="dot red"></span>
-                        <span class="dot yellow"></span>
-                        <span class="dot green"></span>
-                    </div>
-                    <div class="terminal-title">dxgmr - "System Architecture"</div>
-                </div>
-                <div class="terminal-body monospace">
-<pre>
-                                  +-----------------+
-                                  |                 |
-                                  |      User       |
-                                  |                 |
-                                  +--------o--------+
-                                           |
-                                           v
-                                          \+/
-                                        \\   //
-                                      \\       //
-                                    +\   Input   \+
-                                      //       \\
-                                        //   \\
-                                          /o\
-                                           |
-                    +---------+------------+----------+---------+
-                    |         |                       |         |
-                    v         v                       v         v
-              +----------+  +----------+        +----------+  +----------+
-              |          |  |          |        |          |  |          |
-              | Database |  |  Cache   |        |  Auth    |  | Logic    |
-              |          |  |          |        |          |  |          |
-              +----------+  +----------+        +----------+  +----------+
+            <div class="ascii-banner animate-pulse">
+                <pre>
+      _                              
+   __| |__  __ _ _ __ ___  _ __ 
+  / _` \ \/ / _` | '_ ` _ \| '__|
+ | (_| |>  < (_| | | | | | | |   
+  \__,_/_/\_\__, |_| |_| |_|_|   
+            |___/                
+</pre>
+            </div>
+            <h1 class="hero-title">THE_ASCII_ARCHITECT</h1>
+            <p class="hero-subtitle">Stop fighting with SVG exports. Create professional diagrams that live inside your
+                code comments and READMEs.</p>
+
+            <div class="terminal-preview">
+                <div class="terminal-body">
+                    <pre>
++-------------------------------------------------+
+|                                                 |
+|          [ dxgmr system overview ]              |
+|                                                 |
+|  +-------+         +-------+         +-------+  |
+|  | INPUT | -------&gt; | LOGIC | -------&gt; | ASCII |  |
+|  +-------+         +-------+         +-------+  |
+|      |                                   ^      |
+|      |         +---------------+         |      |
+|      +-------&gt; |  COMPILER     | --------+      |
+|                +---------------+                |
+|                                                 |
++-------------------------------------------------+
 </pre>
                 </div>
             </div>
 
             <div class="cta-group">
-                <a href="#install" class="btn primary">Get Started</a>
-                <a href="https://github.com/AgemaLabs/dxgmr" class="btn secondary">View Source</a>
+                <a href="#install" class="btn primary">GET_STARTED.sh</a>
+                <a href="https://github.com/AgemaLabs/dxgmr" class="btn secondary">VIEW_SOURCE</a>
             </div>
         </div>
     </header>
 
     <section id="features" class="features">
         <div class="container">
-            <h2 class="section-title">Why dxgmr?</h2>
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">⚡</div>
-                    <h3>Developer Speed</h3>
-                    <p>Designed for the home row. Modal editing workflow (Insert, Normal, Leader) means you never have to reach for your mouse.</p>
+            <div class="ascii-box">
+                <div class="ascii-box-header">
+                    <span>SECTION: FEATURES_LIST</span>
+                    <span>v1.0.8</span>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">📏</div>
-                    <h3>README Optimized</h3>
-                    <p>Strict 79-character width limit makes every diagram perfectly compatible with GitHub previews and mobile views.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">📐</div>
-                    <h3>Smart Routing</h3>
-                    <p>Professional staircase (Z-mode/S-mode) routing with automatic right-angles. It's architecture, not just lines.</p>
+                <div class="ascii-box-content">
+                    <div class="features-grid">
+                        <div class="feature-card">
+                            <h3>⚡ DEV_SPEED</h3>
+                            <p>Designed for the home row. Modal editing workflow (Insert, Normal, Leader) means you
+                                never have to reach for your mouse.</p>
+                        </div>
+                        <div class="feature-card">
+                            <h3>📂 JSON_PERSISTENCE</h3>
+                            <p>Not just a one-way export. Save your diagrams as .json models to reload and edit your
+                                system layouts later.</p>
+                        </div>
+                        <div class="feature-card">
+                            <h3>📏 README_ALT</h3>
+                            <p>Strict 79-character width limit makes every diagram perfectly compatible with GitHub
+                                previews and mobile views.</p>
+                        </div>
+                        <div class="feature-card">
+                            <h3>📐 SMART_FORMAT</h3>
+                            <p>Professional staircase routing with automatic text wrapping and centering. It's
+                                architecture, not just lines.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -101,17 +161,24 @@
 
     <section id="install" class="install-section">
         <div class="container">
-            <h2 class="section-title">Installation</h2>
-            <div class="install-box">
-                <div class="install-tabs">
-                    <button class="tab-btn active" data-tab="cargo">Cargo</button>
-                    <button class="tab-btn" data-tab="manual">Manual</button>
+            <div class="ascii-box">
+                <div class="ascii-box-header">
+                    <span>SECTION: INSTALLATION</span>
+                    <span>ROOT_REQUIRED: FALSE</span>
                 </div>
-                <div class="tab-content" id="cargo">
-                    <code>cargo install --path .</code>
-                </div>
-                <div class="tab-content hidden" id="manual">
-                    <code>cargo build --release && sudo cp target/release/dxgmr /usr/local/bin/</code>
+                <div class="ascii-box-content">
+                    <div class="install-box">
+                        <div class="install-tabs">
+                            <button class="tab-btn active" data-tab="cargo">CARGO.bin</button>
+                            <button class="tab-btn" data-tab="manual">MANUAL_BUILD</button>
+                        </div>
+                        <div class="tab-content" id="cargo">
+                            <code>$ cargo install --path .</code>
+                        </div>
+                        <div class="tab-content hidden" id="manual">
+                            <code>$ cargo build --release && cp target/release/dxgmr /usr/local/bin/</code>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -119,13 +186,13 @@
 
     <footer>
         <div class="container">
-            <p>Built with ❤️ by <a href="https://github.com/AgemaLabs">AgemaLabs</a> and AI Architects.</p>
-            <p class="copyright">&copy; 2025 dxgmr. Open Source Under MIT.</p>
+            <p>DESIGNED_BY ( <a href="https://github.com/AgemaLabs">AgemaLabs</a> ) + ( AI_ARCHITECTS )</p>
+            <p class="copyright">&copy; 2025 DXGMR_CORE. LICENSED_UNDER ( MIT ).</p>
         </div>
     </footer>
 
     <script>
-        // Simple tab switching logic
+        // Tab switching
         const tabs = document.querySelectorAll('.tab-btn');
         const contents = document.querySelectorAll('.tab-content');
 
@@ -133,11 +200,30 @@
             tab.addEventListener('click', () => {
                 tabs.forEach(t => t.classList.remove('active'));
                 contents.forEach(c => c.classList.add('hidden'));
-                
+
                 tab.classList.add('active');
                 document.getElementById(tab.dataset.tab).classList.remove('hidden');
             });
         });
+
+        // Mobile Menu
+        const menuToggle = document.getElementById('menu-toggle');
+        const menuClose = document.getElementById('menu-close');
+        const sideMenu = document.getElementById('side-menu');
+        const overlay = document.getElementById('overlay');
+        const menuLinks = document.querySelectorAll('.menu-link');
+
+        const toggleMenu = (show) => {
+            sideMenu.classList.toggle('active', show);
+            overlay.classList.toggle('active', show);
+            document.body.style.overflow = show ? 'hidden' : '';
+        };
+
+        menuToggle.addEventListener('click', () => toggleMenu(true));
+        menuClose.addEventListener('click', () => toggleMenu(false));
+        overlay.addEventListener('click', () => toggleMenu(false));
+        menuLinks.forEach(link => link.addEventListener('click', () => toggleMenu(false)));
     </script>
 </body>
+
 </html>

@@ -19,28 +19,65 @@ use crate::renderer::render_to_canvas;
 
 fn main() -> io::Result<()> {
     let args: Vec<String> = std::env::args().collect();
-    let mut title = if args.len() > 1 {
-        args[1..].join(" ").trim().to_string()
+    
+    let state = if args.len() > 1 {
+        let cmd = &args[1];
+        match cmd.as_str() {
+            "new" => {
+                let title = if args.len() > 2 { args[2..].join(" ") } else { "Untitled Diagram".to_string() };
+                AppState::new(title)
+            }
+            "open" => {
+                let title = if args.len() > 2 { args[2..].join(" ") } else { 
+                    println!("Usage: dxgmr open <title>");
+                    return Ok(());
+                };
+                let filename = format!("{}.json", title);
+                match fs::read_to_string(&filename) {
+                    Ok(data) => match serde_json::from_str(&data) {
+                        Ok(diagram) => AppState::from_diagram(diagram),
+                        Err(_) => {
+                            println!("Error: Failed to parse {}. Starting new instead.", filename);
+                            AppState::new(title)
+                        }
+                    },
+                    Err(_) => {
+                        println!("Error: File {} not found. Starting new instead.", filename);
+                        AppState::new(title)
+                    }
+                }
+            }
+            _ => {
+                let title = args[1..].join(" ");
+                let filename = format!("{}.json", title);
+                if let Ok(data) = fs::read_to_string(&filename) {
+                    if let Ok(diagram) = serde_json::from_str(&data) {
+                        AppState::from_diagram(diagram)
+                    } else {
+                        AppState::new(title)
+                    }
+                } else {
+                    AppState::new(title)
+                }
+            }
+        }
     } else {
         println!("Enter a title for your diagram:");
         let mut input = String::new();
         io::stdin().read_line(&mut input)?;
-        input.trim().to_string()
+        let title = input.trim().to_string();
+        if title.is_empty() {
+            AppState::new("Untitled Diagram".to_string())
+        } else {
+            AppState::new(title)
+        }
     };
-
-    if title.is_empty() {
-        title = "Untitled Diagram".to_string();
-    }
-
     // Setup terminal
     enable_raw_mode()?;
     let mut stdout = io::stdout();
     execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
-
-    // Initialize blank state
-    let state = AppState::new(title);
 
     // Run app
     let res = run_app(&mut terminal, state);
@@ -100,6 +137,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut state: AppState) -> io::R
                     AppMode::Insert(_) => ratatui::style::Style::default().fg(ratatui::style::Color::Green),
                     AppMode::Leader => ratatui::style::Style::default().fg(ratatui::style::Color::Yellow),
                     AppMode::Resize(_) => ratatui::style::Style::default().fg(ratatui::style::Color::Magenta),
+                    AppMode::Help => ratatui::style::Style::default().fg(ratatui::style::Color::Cyan),
                 });
             inner_area_cache = block.inner(main_area);
             f.render_widget(block, main_area);
@@ -113,6 +151,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut state: AppState) -> io::R
                 AppMode::Insert(_) => (" INSERT ", ratatui::style::Color::Green),
                 AppMode::Leader => (" LEADER ", ratatui::style::Color::Yellow),
                 AppMode::Resize(_) => (" RESIZE ", ratatui::style::Color::Magenta),
+                AppMode::Help => (" HELP ", ratatui::style::Color::Cyan),
             };
 
             let status_bar = Paragraph::new(ratatui::text::Line::from(vec![
@@ -138,8 +177,9 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut state: AppState) -> io::R
                     ratatui::text::Line::from("  n -> New Box"),
                     ratatui::text::Line::from("  d -> New Diamond"),
                     ratatui::text::Line::from("  t -> New Text"),
-                    ratatui::text::Line::from(format!("  w -> Write ({}.txt)", state.title)),
+                    ratatui::text::Line::from(format!("  w -> Write ({}.txt/.json)", state.title)),
                     ratatui::text::Line::from("  c -> Copy to Clipboard"),
+                    ratatui::text::Line::from("  h -> Help Menu"),
                     ratatui::text::Line::from("  q -> Quit"),
                     ratatui::text::Line::from(""),
                     ratatui::text::Line::from("  <Esc> -> Cancel"),
@@ -147,6 +187,50 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut state: AppState) -> io::R
                 let menu = Paragraph::new(menu_text).block(menu_block);
                 f.render_widget(ratatui::widgets::Clear, popup_area);
                 f.render_widget(menu, popup_area);
+            }
+
+            // HELP MENU (POPUP)
+            if state.mode == AppMode::Help {
+                let popup_area = ratatui::layout::Rect {
+                    x: area.width / 2 - 25,
+                    y: area.height / 2 - 12,
+                    width: 50,
+                    height: 24,
+                };
+                let help_block = Block::default()
+                    .title(" Full Command Reference ")
+                    .borders(Borders::ALL)
+                    .border_style(ratatui::style::Style::default().fg(ratatui::style::Color::Cyan));
+                
+                let help_text = vec![
+                    ratatui::text::Line::from(ratatui::text::Span::styled("--- NAVIGATION & SELECTION ---", ratatui::style::Style::default().add_modifier(ratatui::style::Modifier::BOLD))),
+                    ratatui::text::Line::from("  Tab / BackTab   : Cycle through shapes"),
+                    ratatui::text::Line::from("  Arrows          : Move shape or pan canvas"),
+                    ratatui::text::Line::from("  Esc             : Clear selection / Back to Normal"),
+                    ratatui::text::Line::from(""),
+                    ratatui::text::Line::from(ratatui::text::Span::styled("--- EDITING ---", ratatui::style::Style::default().add_modifier(ratatui::style::Modifier::BOLD))),
+                    ratatui::text::Line::from("  i               : Enter Insert mode (Edit text)"),
+                    ratatui::text::Line::from("  r               : Enter Resize mode (+/- to scale)"),
+                    ratatui::text::Line::from("  Del / Backspace : Delete selected shape/connection"),
+                    ratatui::text::Line::from(""),
+                    ratatui::text::Line::from(ratatui::text::Span::styled("--- CONNECTORS ---", ratatui::style::Style::default().add_modifier(ratatui::style::Modifier::BOLD))),
+                    ratatui::text::Line::from("  c               : Start plain connector from shape"),
+                    ratatui::text::Line::from("  a               : Start arrow connector from shape"),
+                    ratatui::text::Line::from("  Enter           : Finish connector on target shape"),
+                    ratatui::text::Line::from("  a (on conn)     : Toggle arrow on selection"),
+                    ratatui::text::Line::from(""),
+                    ratatui::text::Line::from(ratatui::text::Span::styled("--- COMMANDS (<Leader> = Space) ---", ratatui::style::Style::default().add_modifier(ratatui::style::Modifier::BOLD))),
+                    ratatui::text::Line::from("  <Leader> + n    : Create new Box"),
+                    ratatui::text::Line::from("  <Leader> + d    : Create new Diamond"),
+                    ratatui::text::Line::from("  <Leader> + t    : Create new Text"),
+                    ratatui::text::Line::from("  <Leader> + w    : Save (.json and .txt)"),
+                    ratatui::text::Line::from("  <Leader> + c    : Copy ASCII to clipboard"),
+                    ratatui::text::Line::from(""),
+                    ratatui::text::Line::from(ratatui::text::Span::styled("  Press <Esc> or <Space> to close Help", ratatui::style::Style::default().fg(ratatui::style::Color::Yellow))),
+                ];
+                let help = Paragraph::new(help_text).block(help_block);
+                f.render_widget(ratatui::widgets::Clear, popup_area);
+                f.render_widget(help, popup_area);
             }
 
             // CURSOR
@@ -280,25 +364,45 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut state: AppState) -> io::R
                                     state.selected_connection_index = None;
                                     status_msg = String::from("New shape created below previous");
                                 }
+                                KeyCode::Char('h') => {
+                                    state.mode = AppMode::Help;
+                                }
                                 KeyCode::Char('w') | KeyCode::Char('c') => {
-                                    // Strictly limit export width to 79
-                                    let canvas = render_to_canvas(&state, 79, inner_area_cache.height);
-                                    let text = canvas.to_string();
                                     if key.code == KeyCode::Char('c') {
+                                        let canvas = render_to_canvas(&state, 79, inner_area_cache.height);
+                                        let text = canvas.to_string();
                                         if let Ok(mut clipboard) = arboard::Clipboard::new() {
                                             let _ = clipboard.set_text(text);
                                             status_msg = String::from("Copied to clipboard!");
                                         }
                                     } else {
-                                        let filename = format!("{}.txt", state.title);
-                                        if fs::write(&filename, text).is_ok() {
-                                            status_msg = format!("Saved to {}!", filename);
+                                        // Save ASCII .txt
+                                        let canvas = render_to_canvas(&state, 79, inner_area_cache.height);
+                                        let text = canvas.to_string();
+                                        let txt_filename = format!("{}.txt", state.title);
+                                        let _ = fs::write(&txt_filename, text);
+
+                                        // Save Model .json
+                                        let diagram = state.to_diagram();
+                                        if let Ok(json) = serde_json::to_string_pretty(&diagram) {
+                                            let json_filename = format!("{}.json", state.title);
+                                            if fs::write(&json_filename, json).is_ok() {
+                                                status_msg = format!("Saved {} and {}!", txt_filename, json_filename);
+                                            }
                                         }
                                     }
                                     state.mode = AppMode::Normal;
                                 }
                                 KeyCode::Char('q') => return Ok(()),
                                 KeyCode::Esc => { state.mode = AppMode::Normal; }
+                                _ => {}
+                            }
+                        }
+                        AppMode::Help => {
+                            match key.code {
+                                KeyCode::Esc | KeyCode::Char(' ') | KeyCode::Enter => {
+                                    state.mode = AppMode::Normal;
+                                }
                                 _ => {}
                             }
                         }

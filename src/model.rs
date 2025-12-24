@@ -83,6 +83,14 @@ pub enum AppMode {
     Insert(usize), // Node ID being edited
     Leader,        // Spacebar hit, waiting for command
     Resize(usize), // Node ID being resized
+    Help,          // Showing command help
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Diagram {
+    pub title: String,
+    pub nodes: Vec<Node>,
+    pub connections: Vec<Connection>,
 }
 
 pub struct AppState {
@@ -115,6 +123,21 @@ impl AppState {
             connection_source_id: None,
             connection_has_arrow: false,
             mode: AppMode::Normal,
+        }
+    }
+
+    pub fn from_diagram(diagram: Diagram) -> Self {
+        let mut state = Self::new(diagram.title);
+        state.nodes = diagram.nodes;
+        state.connections = diagram.connections;
+        state
+    }
+
+    pub fn to_diagram(&self) -> Diagram {
+        Diagram {
+            title: self.title.clone(),
+            nodes: self.nodes.clone(),
+            connections: self.connections.clone(),
         }
     }
 }

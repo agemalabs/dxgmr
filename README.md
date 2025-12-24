@@ -1,8 +1,10 @@
-# dxgmr: The ASCII Architect
+# ┌────────────────────────────────────────────────────────────────────────┐
+# │ dxgmr: THE_ASCII_ARCHITECT                                             │
+# └────────────────────────────────────────────────────────────────────────┘
 
 > "Why use a 50MB SVG when 79 characters of ASCII can explain your logic?"
 
-**dxgmr** (pronounced "diagrammer") is a lightweight, terminal-based tool designed for developers who want to create professional-grade ASCII diagrams without leaving their environment. It bridges the gap between high-overhead GUI tools and the painstaking manual labor of "drawing" with your spacebar.
+**dxgmr** (pronounced "diagrammer") is a lightweight, terminal-based tool designed for developers who want to create professional-grade ASCII diagrams without leaving their environment.
 
 ```text
                                   +-----------------+
@@ -19,90 +21,102 @@
                                       //       \\
                                         //   \\
                                           /o\
-                                           |
+                                            |
                     +---------+------------+----------+---------+
                     |         |                       |         |
                     v         v                       v         v
-              +----------+  +----------+        +----------+  +----------+
-              |          |  |          |        |          |  |          |
-              | Database |  |  Cache   |        |  Auth    |  | Logic    |
-              |          |  |          |        |          |  |          |
-              +----------+  +----------+        +----------+  +----------+
+               +----------+  +----------+        +----------+  +----------+
+               |          |  |          |        |          |  |          |
+               | Database |  |  Cache   |        |  Auth    |  | Logic    |
+               |          |  |          |        |          |  |          |
+               +----------+  +----------+        +----------+  +----------+
 ```
 
-## 🎨 The Rationale
+## ┌──────────────┐
+## │ RATIONALE    │
+## └──────────────┘
 
 *   **⚡ Speed**: Built for developers who hate reaching for the mouse. With a "Type, Tab, Link" workflow, you can map out a complex system in seconds.
-*   **🧩 Simplicity**: The ultimate "analog" tool. It doesn't save to proprietary formats; it saves to `.txt`. Your diagrams are version-controllable, searchable, and instantly viewable on GitHub.
+*   **🧩 Persistence**: Unlike simple ASCII drawers, **dxgmr** saves your model to `.json`. You can open, edit, and move shapes in previously saved diagrams.
 *   **🔗 Analog Aesthetics**: There is a unique clarity to fixed-width ASCII. It belongs in your code comments, READMEs, and technical documentation.
 
-## ✨ Features
+## ┌──────────────┐
+## │ FEATURES     │
+## └──────────────┘
 
-*   **Seamless Grid**: Automatically constrained to a **79-character width**, ensuring your diagrams never wrap or break layout in GitHub READMEs or mobile TUI views.
-*   **Smart Staircase Routing**: Implements professional "Z-mode" and "S-mode" routing with automatic right-angles. It's not just lines; it's architecture.
-*   **Modal Editing**: Inspired by Vim. Switch between `Normal`, `Insert`, `Leader`, and `Resize` modes effortlessly.
-*   **Hybrid Input**: Fully mouse-draggable for fine-tuning, but 100% keyboard-operable for high-speed drafting.
-*   **One-Click Export**: Save direct to a file named after your diagram or copy the raw ASCII to your clipboard instantly.
+*   **README Optimized**: Automatically constrained to a **79-character width**, ensuring your diagrams never wrap or break layout in GitHub READMEs.
+*   **Smart Staircase Routing**: Implements professional routing with automatic right-angles. It's not just lines; it's architecture.
+*   **Modal Editing**: Inspired by Vim. Switch between `Normal`, `Insert`, `Leader`, `Resize`, and `Help` modes.
+*   **Vim-like CLI**: Use subcommands like `new` and `open` to manage your files.
+*   **Dual-Format Export**: One click saves both a `.txt` (for documentation) and a `.json` (for future editing).
 
-## 🚀 How to Use
+## ┌──────────────┐
+## │ HOW TO USE   │
+## └──────────────┘
 
-### 1. The Startup
-Run the binary and provide a title for your diagram. This title becomes the filename when you save.
+### 🎬 Operations
+The CLI supports Vim-like file management:
 ```bash
+# Start a new diagram
+dxgmr new "System Architecture"
+
+# Open an existing diagram (.json must exist)
+dxgmr open "System Architecture"
+
+# Quick open (auto-detects .json)
 dxgmr "System Architecture"
 ```
 
-### 2. The Keyboard Workflow
+### ⌨️ Keyboard Workflow
 The primary power of **dxgmr** lies in its **Leader Key** system (the `Spacebar`).
 
 | Key | Action | Mode |
 | :--- | :--- | :--- |
 | `Space` | Open the **Leader Menu** (Commands) | Normal |
-| `Space` → `n` | Create a new **Box** (Process) | Leader |
-| `Space` → `d` | Create a new **Diamond** (Decision) | Leader |
-| `Space` → `t` | Create a new **Text Node** (Borderless annotation) | Leader |
+| `Space` → `h` | Show **Full Help Menu** | Leader |
+| `Space` → `n` | Create a new **Box** | Leader |
+| `Space` → `d` | Create a new **Diamond** | Leader |
+| `Space` → `t` | Create a new **Text Node** | Leader |
+| `Space` → `w` | **Write** (Save .txt and .json) | Leader |
 | `i` | Enter **Insert Mode** to type inside a shape | Normal |
-| `Tab` | (In Insert Mode) Finish text & skip to next node | Insert |
-| `Esc` | Return to **Normal Mode** / Clear Selection | Any |
 | `r` | Enter **Resize Mode** (Use `+` / `-` keys) | Normal |
+| `Esc` | Return to **Normal Mode** / Clear Selection | Any |
 
-### 3. Making Connections
-Connectors in **dxgmr** are smart. They automatically choose the best "entry/exit" point based on the relative position of the nodes:
-1.  **Select** your source node.
-2.  Press **`c`** (for a plain line) or **`a`** (for an arrow).
+### 🔗 Making Connections
+Connectors in **dxgmr** are smart. They automatically choose the best "entry/exit" point:
+1.  **Select** your source node (use `Tab` to cycle).
+2.  Press **`c`** (plain line) or **`a`** (arrow).
 3.  Press **`Tab`** to highlight the target node.
 4.  Press **`Enter`** to snap the link into place.
+5.  *Tip: Select an existing connection and press `a` to toggle its arrowhead.*
 
-## 💻 Keyboard Shortcuts Reference
+## ┌──────────────────────────────────────┐
+## │ KEYBOARD SHORTCUTS REFERENCE         │
+## └──────────────────────────────────────┘
 
 **Normal Mode**
 *   `Arrows`: Move selected node (or pan the infinite canvas if nothing is selected).
 *   `Tab` / `Shift+Tab`: Cycle selection between nodes.
 *   `Backspace` / `Delete`: Delete the selected node (and its links) or a highlighted connection.
-*   `a`: Toggle an arrowhead on an already selected connection.
+*   `i`: Edit text in selected node.
+*   `r`: Resize selected node.
 
 **Leader Menu (`Space`)**
-*   `w`: Write (Save) the diagram as a `.txt` file.
-*   `c`: Copy the diagram ASCII to the clipboard.
-*   `q`: Quit the application.
+*   `w`: Write (Save) the diagram as `.txt` and `.json`.
+*   `c`: Copy the ASCII to the clipboard.
+*   `h`: Toggle the Full Help Reference.
+*   `q`: Quit.
 
-## 🛠 Installation
+## ┌──────────────┐
+## │ INSTALLATION │
+## └──────────────┘
 
 ### From Source (Recommended)
-You can install **dxgmr** directly from source using Cargo. This will place the binary in your `~/.cargo/bin` directory.
-
 ```bash
-# Clone the repository
 git clone https://github.com/AgemaLabs/dxgmr.git
 cd dxgmr
-
-# Install to your path
 cargo install --path .
 ```
-
-### Manual Installation (macOS / Linux)
-1. Build the release binary: `cargo build --release`
-2. Move it to your path: `sudo cp target/release/dxgmr /usr/local/bin/`
 
 ---
 *Built with ❤️ by a pair of Humans @AgemaLabs and AI Architects. Open Source and terminal-optimized.*
