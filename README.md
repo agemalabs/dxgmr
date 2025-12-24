@@ -46,6 +46,8 @@
 
 *   **README Optimized**: Automatically constrained to a **79-character width**, ensuring your diagrams never wrap or break layout in GitHub READMEs.
 *   **Smart Staircase Routing**: Implements professional routing with automatic right-angles. It's not just lines; it's architecture.
+*   **Grouping Frames**: Use the new `Frame` component to logically group sections of your diagram with a custom title.
+*   **Context Menu Support**: Right-click anywhere to access a fast mouse-driven menu for creating, connecting, and deleting elements.
 *   **Modal Editing**: Inspired by Vim. Switch between `Normal`, `Insert`, `Leader`, `Resize`, and `Help` modes.
 *   **Vim-like CLI**: Use subcommands like `new` and `open` to manage your files.
 *   **Dual-Format Export**: One click saves both a `.txt` (for documentation) and a `.json` (for future editing).
@@ -77,6 +79,7 @@ The primary power of **dxgmr** lies in its **Leader Key** system (the `Spacebar`
 | `Space` → `n` | Create a new **Box** | Leader |
 | `Space` → `d` | Create a new **Diamond** | Leader |
 | `Space` → `t` | Create a new **Text Node** | Leader |
+| `Space` → `f` | Create a new **Frame** | Leader |
 | `Space` → `w` | **Write** (Save .txt and .json) | Leader |
 | `i` | Enter **Insert Mode** to type inside a shape | Normal |
 | `r` | Enter **Resize Mode** (Use `+` / `-` keys) | Normal |
@@ -100,6 +103,7 @@ Connectors in **dxgmr** are smart. They automatically choose the best "entry/exi
 *   `Backspace` / `Delete`: Delete the selected node (and its links) or a highlighted connection.
 *   `i`: Edit text in selected node.
 *   `r`: Resize selected node.
+*   `Right Click`: Open context menu for quick actions.
 
 **Leader Menu (`Space`)**
 *   `w`: Write (Save) the diagram as `.txt` and `.json`.

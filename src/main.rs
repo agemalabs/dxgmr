@@ -104,9 +104,10 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut state: AppState) -> io::R
     loop {
         let mut inner_area_cache = ratatui::layout::Rect::default();
         let mut cursor_pos: Option<(u16, u16)> = None;
+        let size = terminal.size()?;
+        let area = ratatui::layout::Rect::new(0, 0, size.width, size.height);
 
         terminal.draw(|f| {
-            let area = f.area();
             let horizontal_chunks = ratatui::layout::Layout::default()
                 .direction(ratatui::layout::Direction::Horizontal)
                 .constraints([
@@ -138,6 +139,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut state: AppState) -> io::R
                     AppMode::Leader => ratatui::style::Style::default().fg(ratatui::style::Color::Yellow),
                     AppMode::Resize(_) => ratatui::style::Style::default().fg(ratatui::style::Color::Magenta),
                     AppMode::Help => ratatui::style::Style::default().fg(ratatui::style::Color::Cyan),
+                    AppMode::ContextMenu { .. } => ratatui::style::Style::default().fg(ratatui::style::Color::White),
                 });
             inner_area_cache = block.inner(main_area);
             f.render_widget(block, main_area);
@@ -152,6 +154,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut state: AppState) -> io::R
                 AppMode::Leader => (" LEADER ", ratatui::style::Color::Yellow),
                 AppMode::Resize(_) => (" RESIZE ", ratatui::style::Color::Magenta),
                 AppMode::Help => (" HELP ", ratatui::style::Color::Cyan),
+                AppMode::ContextMenu { .. } => (" MENU ", ratatui::style::Color::White),
             };
 
             let status_bar = Paragraph::new(ratatui::text::Line::from(vec![
@@ -177,6 +180,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut state: AppState) -> io::R
                     ratatui::text::Line::from("  n -> New Box"),
                     ratatui::text::Line::from("  d -> New Diamond"),
                     ratatui::text::Line::from("  t -> New Text"),
+                    ratatui::text::Line::from("  f -> New Frame"),
                     ratatui::text::Line::from(format!("  w -> Write ({}.txt/.json)", state.title)),
                     ratatui::text::Line::from("  c -> Copy to Clipboard"),
                     ratatui::text::Line::from("  h -> Help Menu"),
@@ -223,6 +227,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut state: AppState) -> io::R
                     ratatui::text::Line::from("  <Leader> + n    : Create new Box"),
                     ratatui::text::Line::from("  <Leader> + d    : Create new Diamond"),
                     ratatui::text::Line::from("  <Leader> + t    : Create new Text"),
+                    ratatui::text::Line::from("  <Leader> + f    : Create new Frame"),
                     ratatui::text::Line::from("  <Leader> + w    : Save (.json and .txt)"),
                     ratatui::text::Line::from("  <Leader> + c    : Copy ASCII to clipboard"),
                     ratatui::text::Line::from(""),
@@ -233,6 +238,59 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut state: AppState) -> io::R
                 f.render_widget(help, popup_area);
             }
 
+            // CONTEXT MENU (MOUSE)
+            if let AppMode::ContextMenu { x, y, selected_index } = state.mode {
+                let items = vec![
+                    " New Box ",
+                    " New Diamond ",
+                    " New Text ",
+                    " New Frame ",
+                    "---------",
+                    " Start Connector ",
+                    " Start Arrow ",
+                    " Delete ",
+                    "---------",
+                    " Cancel "
+                ];
+                
+                let width = 21;
+                let height = items.len() as u16 + 2;
+                
+                // Adjust for terminal positioning
+                let screen_x = inner_area_cache.x + x;
+                let screen_y = inner_area_cache.y + y;
+
+                // Keep menu on screen
+                let menu_x = if screen_x + width > area.width { area.width.saturating_sub(width) } else { screen_x };
+                let menu_y = if screen_y + height > area.height { area.height.saturating_sub(height) } else { screen_y };
+
+                let popup_area = ratatui::layout::Rect {
+                    x: menu_x,
+                    y: menu_y,
+                    width,
+                    height,
+                };
+
+                let menu_block = Block::default()
+                    .borders(Borders::ALL)
+                    .border_style(ratatui::style::Style::default().fg(ratatui::style::Color::White));
+                
+                let menu_text: Vec<ratatui::text::Line> = items.iter().enumerate().map(|(i, &item)| {
+                    if i == selected_index {
+                        ratatui::text::Line::from(ratatui::text::Span::styled(
+                            format!("> {}", item),
+                            ratatui::style::Style::default().bg(ratatui::style::Color::White).fg(ratatui::style::Color::Black)
+                        ))
+                    } else {
+                        ratatui::text::Line::from(format!("  {}", item))
+                    }
+                }).collect();
+
+                let menu = Paragraph::new(menu_text).block(menu_block);
+                f.render_widget(ratatui::widgets::Clear, popup_area);
+                f.render_widget(menu, popup_area);
+            }
+
             // CURSOR
             if let AppMode::Insert(id) = state.mode {
                 if let Some(node) = state.nodes.iter().find(|n| n.id == id) {
@@ -240,6 +298,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut state: AppState) -> io::R
                         ShapeType::Box => node.width.saturating_sub(2),
                         ShapeType::Diamond => node.width.saturating_sub(6).max(1),
                         ShapeType::Text => node.width,
+                        ShapeType::Frame => node.width.saturating_sub(2),
                     };
                     let lines = crate::model::wrap_text(&node.text, available_width);
                     let lines = if lines.is_empty() { vec![String::new()] } else { lines };
@@ -347,6 +406,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut state: AppState) -> io::R
                                     let shape = match key.code {
                                         KeyCode::Char('n') => ShapeType::Box,
                                         KeyCode::Char('d') => ShapeType::Diamond,
+                                        KeyCode::Char('f') => ShapeType::Frame,
                                         _ => ShapeType::Text,
                                     };
                                     state.nodes.push(Node {
@@ -354,8 +414,8 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut state: AppState) -> io::R
                                         shape,
                                         x: world_x.max(0) as u16,
                                         y: world_y.max(0) as u16,
-                                        width: if shape == ShapeType::Text { 10 } else if shape == ShapeType::Box { 20 } else { 15 },
-                                        height: if shape == ShapeType::Text { 1 } else if shape == ShapeType::Box { 5 } else { 7 },
+                                        width: if shape == ShapeType::Text { 10 } else if shape == ShapeType::Box { 20 } else if shape == ShapeType::Frame { 30 } else { 15 },
+                                        height: if shape == ShapeType::Text { 1 } else if shape == ShapeType::Box { 5 } else if shape == ShapeType::Frame { 10 } else { 7 },
                                         text: String::new(),
                                         selected: true,
                                     });
@@ -427,6 +487,95 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut state: AppState) -> io::R
                                 }
                             } else {
                                 state.mode = AppMode::Normal;
+                            }
+                        }
+                        AppMode::ContextMenu { x, y, mut selected_index } => {
+                            match key.code {
+                                KeyCode::Up => {
+                                    if selected_index > 0 {
+                                        selected_index -= 1;
+                                        if selected_index == 4 || selected_index == 8 { selected_index -= 1; }
+                                        state.mode = AppMode::ContextMenu { x, y, selected_index };
+                                    }
+                                }
+                                KeyCode::Down => {
+                                    if selected_index < 9 {
+                                        selected_index += 1;
+                                        if selected_index == 4 || selected_index == 8 { selected_index += 1; }
+                                        state.mode = AppMode::ContextMenu { x, y, selected_index };
+                                    }
+                                }
+                                KeyCode::Enter | KeyCode::Char(' ') => {
+                                    let id = state.nodes.iter().map(|n| n.id).max().unwrap_or(0) + 1;
+                                    let world_x = (x as i32 + state.camera_offset.0).max(0) as u16;
+                                    let world_y = (y as i32 + state.camera_offset.1).max(0) as u16;
+                                    
+                                    match selected_index {
+                                        0 => { // New Box
+                                            state.nodes.push(Node { id, shape: ShapeType::Box, x: world_x, y: world_y, width: 20, height: 5, text: String::new(), selected: true });
+                                            state.mode = AppMode::Insert(id);
+                                        }
+                                        1 => { // New Diamond
+                                            state.nodes.push(Node { id, shape: ShapeType::Diamond, x: world_x, y: world_y, width: 15, height: 7, text: String::new(), selected: true });
+                                            state.mode = AppMode::Insert(id);
+                                        }
+                                        2 => { // New Text
+                                            state.nodes.push(Node { id, shape: ShapeType::Text, x: world_x, y: world_y, width: 10, height: 1, text: String::new(), selected: true });
+                                            state.mode = AppMode::Insert(id);
+                                        }
+                                        3 => { // New Frame
+                                            state.nodes.push(Node { id, shape: ShapeType::Frame, x: world_x, y: world_y, width: 30, height: 10, text: String::new(), selected: true });
+                                            state.mode = AppMode::Insert(id);
+                                        }
+                                        5 => { // Start Connector
+                                            if let Some(node) = state.nodes.iter().rev().find(|n| n.contains(world_x, world_y)) {
+                                                state.connection_source_id = Some(node.id);
+                                                state.connection_has_arrow = false;
+                                                status_msg = format!("Connector source: {}. Tab to target, Enter to finish.", node.text.split_whitespace().next().unwrap_or("Node"));
+                                            } else {
+                                                status_msg = String::from("No node at click position");
+                                            }
+                                            state.mode = AppMode::Normal;
+                                        }
+                                        6 => { // Start Arrow
+                                            if let Some(node) = state.nodes.iter().rev().find(|n| n.contains(world_x, world_y)) {
+                                                state.connection_source_id = Some(node.id);
+                                                state.connection_has_arrow = true;
+                                                status_msg = format!("Arrow source: {}. Tab to target, Enter to finish.", node.text.split_whitespace().next().unwrap_or("Node"));
+                                            } else {
+                                                status_msg = String::from("No node at click position");
+                                            }
+                                            state.mode = AppMode::Normal;
+                                        }
+                                        7 => { // Delete
+                                            if let Some(idx) = state.nodes.iter().position(|n| n.contains(world_x, world_y)) {
+                                                let node_id = state.nodes[idx].id;
+                                                state.nodes.remove(idx);
+                                                state.connections.retain(|c| c.from_id != node_id && c.to_id != node_id);
+                                                status_msg = String::from("Shape and connections deleted");
+                                            } else {
+                                                for (i, conn) in state.connections.iter().enumerate().rev() {
+                                                    if conn.contains(world_x, world_y, &state.nodes) {
+                                                        state.connections.remove(i);
+                                                        status_msg = String::from("Connection deleted");
+                                                        break;
+                                                    }
+                                                }
+                                            }
+                                            state.mode = AppMode::Normal;
+                                        }
+                                        9 => { state.mode = AppMode::Normal; }
+                                        _ => { state.mode = AppMode::Normal; }
+                                    }
+                                    if selected_index < 4 {
+                                        for n in &mut state.nodes { if n.id != id { n.selected = false; } }
+                                        state.selected_connection_index = None;
+                                    }
+                                }
+                                KeyCode::Esc => {
+                                    state.mode = AppMode::Normal;
+                                }
+                                _ => {}
                             }
                         }
                         AppMode::Normal => {
@@ -577,9 +726,105 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut state: AppState) -> io::R
                     let mx_screen = mouse.column - inner_area_cache.x;
                     let my_screen = mouse.row - inner_area_cache.y;
                     
-                    // Critical: Mouse interactions must use WORLD coordinates
                     let mx = (mx_screen as i32 + state.camera_offset.0).max(0) as u16;
                     let my = (my_screen as i32 + state.camera_offset.1).max(0) as u16;
+
+                    // --- CONTEXT MENU HANDLING ---
+                    if let AppMode::ContextMenu { x, y, .. } = state.mode {
+                        let width = 21;
+                        let height = 11; // items.len() + 2
+                        let screen_x = inner_area_cache.x + x;
+                        let screen_y = inner_area_cache.y + y;
+                        let menu_x = if screen_x + width > area.width { area.width.saturating_sub(width) } else { screen_x };
+                        let menu_y = if screen_y + height > area.height { area.height.saturating_sub(height) } else { screen_y };
+
+                        if mouse.column >= menu_x && mouse.column < menu_x + width &&
+                           mouse.row >= menu_y && mouse.row < menu_y + height {
+                            let local_y = mouse.row.saturating_sub(menu_y).saturating_sub(1);
+                            if local_y < 10 && local_y != 4 && local_y != 8 {
+                                state.mode = AppMode::ContextMenu { x, y, selected_index: local_y as usize };
+                                if matches!(mouse.kind, event::MouseEventKind::Down(event::MouseButton::Left)) {
+                                    let id = state.nodes.iter().map(|n| n.id).max().unwrap_or(0) + 1;
+                                    let world_x = (x as i32 + state.camera_offset.0).max(0) as u16;
+                                    let world_y = (y as i32 + state.camera_offset.1).max(0) as u16;
+                                    
+                                    match local_y {
+                                        0 => { // New Box
+                                            state.nodes.push(Node { id, shape: ShapeType::Box, x: world_x, y: world_y, width: 20, height: 5, text: String::new(), selected: true });
+                                            state.mode = AppMode::Insert(id);
+                                        }
+                                        1 => { // New Diamond
+                                            state.nodes.push(Node { id, shape: ShapeType::Diamond, x: world_x, y: world_y, width: 15, height: 7, text: String::new(), selected: true });
+                                            state.mode = AppMode::Insert(id);
+                                        }
+                                        2 => { // New Text
+                                            state.nodes.push(Node { id, shape: ShapeType::Text, x: world_x, y: world_y, width: 10, height: 1, text: String::new(), selected: true });
+                                            state.mode = AppMode::Insert(id);
+                                        }
+                                        3 => { // New Frame
+                                            state.nodes.push(Node { id, shape: ShapeType::Frame, x: world_x, y: world_y, width: 30, height: 10, text: String::new(), selected: true });
+                                            state.mode = AppMode::Insert(id);
+                                        }
+                                        5 => { // Start Connector
+                                            if let Some(node) = state.nodes.iter().rev().find(|n| n.contains(world_x, world_y)) {
+                                                state.connection_source_id = Some(node.id);
+                                                state.connection_has_arrow = false;
+                                                status_msg = format!("Connector source: {}. Tab to target, Enter to finish.", node.text.split_whitespace().next().unwrap_or("Node"));
+                                            } else {
+                                                status_msg = String::from("No node at click position");
+                                            }
+                                            state.mode = AppMode::Normal;
+                                        }
+                                        6 => { // Start Arrow
+                                            if let Some(node) = state.nodes.iter().rev().find(|n| n.contains(world_x, world_y)) {
+                                                state.connection_source_id = Some(node.id);
+                                                state.connection_has_arrow = true;
+                                                status_msg = format!("Arrow source: {}. Tab to target, Enter to finish.", node.text.split_whitespace().next().unwrap_or("Node"));
+                                            } else {
+                                                status_msg = String::from("No node at click position");
+                                            }
+                                            state.mode = AppMode::Normal;
+                                        }
+                                        7 => { // Delete
+                                            if let Some(idx) = state.nodes.iter().position(|n| n.contains(world_x, world_y)) {
+                                                let node_id = state.nodes[idx].id;
+                                                state.nodes.remove(idx);
+                                                state.connections.retain(|c| c.from_id != node_id && c.to_id != node_id);
+                                                status_msg = String::from("Shape and connections deleted");
+                                            } else {
+                                                for (i, conn) in state.connections.iter().enumerate().rev() {
+                                                    if conn.contains(world_x, world_y, &state.nodes) {
+                                                        state.connections.remove(i);
+                                                        status_msg = String::from("Connection deleted");
+                                                        break;
+                                                    }
+                                                }
+                                            }
+                                            state.mode = AppMode::Normal;
+                                        }
+                                        9 => { state.mode = AppMode::Normal; }
+                                        _ => { state.mode = AppMode::Normal; }
+                                    }
+                                    if local_y < 4 {
+                                        for n in &mut state.nodes { if n.id != id { n.selected = false; } }
+                                        state.selected_connection_index = None;
+                                    }
+                                    continue;
+                                }
+                            }
+                            if !matches!(mouse.kind, event::MouseEventKind::Down(event::MouseButton::Right)) {
+                                continue;
+                            }
+                        } else if matches!(mouse.kind, event::MouseEventKind::Down(event::MouseButton::Left)) {
+                            state.mode = AppMode::Normal;
+                        }
+                    }
+
+                    if matches!(mouse.kind, event::MouseEventKind::Down(event::MouseButton::Right)) {
+                        state.mode = AppMode::ContextMenu { x: mx_screen, y: my_screen, selected_index: 0 };
+                        continue;
+                    }
+                    // --- END CONTEXT MENU HANDLING ---
 
                     match mouse.kind {
                         event::MouseEventKind::Down(event::MouseButton::Left) => {

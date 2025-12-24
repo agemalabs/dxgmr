@@ -96,6 +96,56 @@ impl Canvas {
         }
     }
 
+    pub fn draw_frame(&mut self, node: &Node) {
+        let x1 = node.x;
+        let y1 = node.y;
+        let x2 = x1 + node.width - 1;
+        let y2 = y1 + node.height - 1;
+
+        let corner = if node.selected { '#' } else { '+' };
+        let horiz = if node.selected { '=' } else { '-' };
+        let vert = if node.selected { '#' } else { '|' };
+
+        // Corners
+        self.set(x1, y1, corner);
+        self.set(x2, y1, corner);
+        self.set(x1, y2, corner);
+        self.set(x2, y2, corner);
+
+        // Horizontal lines
+        for x in (x1 + 1)..x2 {
+            self.set(x, y1, horiz);
+            self.set(x, y2, horiz);
+        }
+
+        // Vertical lines
+        for y in (y1 + 1)..y2 {
+            self.set(x1, y, vert);
+            self.set(x2, y, vert);
+        }
+
+        // Draw title if present
+        if !node.text.is_empty() {
+            let title = format!(" [ {} ] ", node.text);
+            let title_len = title.len() as u16;
+            let available_width = node.width.saturating_sub(4);
+            
+            if title_len <= available_width {
+                let tx = x1 + 2;
+                for (i, c) in title.chars().enumerate() {
+                    self.set(tx + i as u16, y1, c);
+                }
+            } else if available_width > 10 {
+                // Truncate title
+                let truncated = format!(" [ {}... ] ", &node.text[..available_width.saturating_sub(7) as usize]);
+                let tx = x1 + 2;
+                for (i, c) in truncated.chars().enumerate() {
+                    self.set(tx + i as u16, y1, c);
+                }
+            }
+        }
+    }
+
     pub fn draw_diamond(&mut self, node: &Node) {
         let x1 = node.x;
         let y1 = node.y;
@@ -343,6 +393,7 @@ pub fn render_to_canvas(state: &AppState, width: u16, height: u16) -> Canvas {
             ShapeType::Box => canvas.draw_box(node),
             ShapeType::Diamond => canvas.draw_diamond(node),
             ShapeType::Text => canvas.draw_text_node(node),
+            ShapeType::Frame => canvas.draw_frame(node),
         }
     }
 

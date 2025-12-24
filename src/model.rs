@@ -5,6 +5,7 @@ pub enum ShapeType {
     Box,      // Rectangular
     Diamond,  // Decision
     Text,     // Borderless text
+    Frame,    // Grouping frame with title
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -84,6 +85,7 @@ pub enum AppMode {
     Leader,        // Spacebar hit, waiting for command
     Resize(usize), // Node ID being resized
     Help,          // Showing command help
+    ContextMenu { x: u16, y: u16, selected_index: usize },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
