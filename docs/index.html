@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dxgmr | The ASCII Architect</title>
+    <meta name="description" content="A lightweight, terminal-based tool for creating professional ASCII diagrams. Speed, simplicity, and analog aesthetics for your code documentation.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="background-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <nav>
+        <div class="logo">dxgmr</div>
+        <div class="nav-links">
+            <a href="#features">Features</a>
+            <a href="#install">Install</a>
+            <a href="https://github.com/AgemaLabs/dxgmr" class="github-btn">GitHub</a>
+        </div>
+    </nav>
+
+    <header>
+        <div class="container">
+            <h1 class="hero-title">The <span class="gradient-text">ASCII</span> Architect</h1>
+            <p class="hero-subtitle">Stop fighting with SVG exports. Create professional diagrams that live inside your code comments and READMEs.</p>
+            
+            <div class="terminal-preview animate-float">
+                <div class="terminal-header">
+                    <div class="dots">
+                        <span class="dot red"></span>
+                        <span class="dot yellow"></span>
+                        <span class="dot green"></span>
+                    </div>
+                    <div class="terminal-title">dxgmr - "System Architecture"</div>
+                </div>
+                <div class="terminal-body monospace">
+<pre>
+                                  +-----------------+
+                                  |                 |
+                                  |      User       |
+                                  |                 |
+                                  +--------o--------+
+                                           |
+                                           v
+                                          \+/
+                                        \\   //
+                                      \\       //
+                                    +\   Input   \+
+                                      //       \\
+                                        //   \\
+                                          /o\
+                                           |
+                    +---------+------------+----------+---------+
+                    |         |                       |         |
+                    v         v                       v         v
+              +----------+  +----------+        +----------+  +----------+
+              |          |  |          |        |          |  |          |
+              | Database |  |  Cache   |        |  Auth    |  | Logic    |
+              |          |  |          |        |          |  |          |
+              +----------+  +----------+        +----------+  +----------+
+</pre>
+                </div>
+            </div>
+
+            <div class="cta-group">
+                <a href="#install" class="btn primary">Get Started</a>
+                <a href="https://github.com/AgemaLabs/dxgmr" class="btn secondary">View Source</a>
+            </div>
+        </div>
+    </header>
+
+    <section id="features" class="features">
+        <div class="container">
+            <h2 class="section-title">Why dxgmr?</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Developer Speed</h3>
+                    <p>Designed for the home row. Modal editing workflow (Insert, Normal, Leader) means you never have to reach for your mouse.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📏</div>
+                    <h3>README Optimized</h3>
+                    <p>Strict 79-character width limit makes every diagram perfectly compatible with GitHub previews and mobile views.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📐</div>
+                    <h3>Smart Routing</h3>
+                    <p>Professional staircase (Z-mode/S-mode) routing with automatic right-angles. It's architecture, not just lines.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="install" class="install-section">
+        <div class="container">
+            <h2 class="section-title">Installation</h2>
+            <div class="install-box">
+                <div class="install-tabs">
+                    <button class="tab-btn active" data-tab="cargo">Cargo</button>
+                    <button class="tab-btn" data-tab="manual">Manual</button>
+                </div>
+                <div class="tab-content" id="cargo">
+                    <code>cargo install --path .</code>
+                </div>
+                <div class="tab-content hidden" id="manual">
+                    <code>cargo build --release && sudo cp target/release/dxgmr /usr/local/bin/</code>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>Built with ❤️ by <a href="https://github.com/AgemaLabs">AgemaLabs</a> and AI Architects.</p>
+            <p class="copyright">&copy; 2025 dxgmr. Open Source Under MIT.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Simple tab switching logic
+        const tabs = document.querySelectorAll('.tab-btn');
+        const contents = document.querySelectorAll('.tab-content');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                contents.forEach(c => c.classList.add('hidden'));
+                
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab).classList.remove('hidden');
+            });
+        });
+    </script>
+</body>
+</html>

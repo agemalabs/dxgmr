@@ -87,11 +87,22 @@ Connectors in **dxgmr** are smart. They automatically choose the best "entry/exi
 *   `q`: Quit the application.
 
 ## 🛠 Installation
-Since **dxgmr** is built in Rust, you can install it via cargo:
+
+### From Source (Recommended)
+You can install **dxgmr** directly from source using Cargo. This will place the binary in your `~/.cargo/bin` directory.
 
 ```bash
-cargo install dxgmr
+# Clone the repository
+git clone https://github.com/AgemaLabs/dxgmr.git
+cd dxgmr
+
+# Install to your path
+cargo install --path .
 ```
 
+### Manual Installation (macOS / Linux)
+1. Build the release binary: `cargo build --release`
+2. Move it to your path: `sudo cp target/release/dxgmr /usr/local/bin/`
+
 ---
-*Built with ❤️ by a pair of Human and AI Architects. Open Source and terminal-optimized.*
+*Built with ❤️ by a pair of Humans @AgemaLabs and AI Architects. Open Source and terminal-optimized.*
